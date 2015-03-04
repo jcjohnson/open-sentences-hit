@@ -1,0 +1,364 @@
+<html>
+  <head>
+    <title>A fancy title</title>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
+    <script src='//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js'></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.string/2.3.3/underscore.string.min.js"></script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js'></script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.10.2/typeahead.jquery.min.js'></script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.2/raphael-min.js'></script>
+    <script src='js/utils.js'></script>
+    <script src='js/colors.js'></script>
+    <script src='js/text-box.js'></script>
+    <script src='js/circle-object.js'></script>
+    <script src='js/alerter.js'></script>
+    <script src='js/image-canvas.js'></script>
+    <script src='js/bbox-drawer.js'></script>
+    <script src='js/open-sentences-backbone-lib.js'></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href='css/typeahead.css' rel='stylesheet'>
+    <style>
+      .sentence-part {
+        width: 100%;
+        font-size: 24px;
+      }
+      .full-width {
+        width: 100%;
+      }
+      .font24 { font-size: 24px; }
+      .emph-target {
+        color: red;
+      }
+      .my-progress {
+        font-size: 20px;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .example {
+        background-color: #f0f0f0;
+        padding-bottom: 30px;
+        border-radius: 5px;
+      }
+      .instructions {
+        font-size: 20px;
+        overflow: visible;
+      }
+      .guidelines {
+        font-size: 24px;
+      }
+      .guidelines li {
+        padding-bottom: 10px;
+      }
+      .pad-bottom {
+        padding-bottom: 20px;
+      }
+      .bbox-example {
+        text-align: center;
+        display: inline-block;
+        padding: 15px;
+        border-radius: 5px;
+      }
+      .small-text {
+        font-size: 14px;
+      }
+      .writing-example {
+        padding: 5px;
+        border-radius: 5px;
+        margin-top: 5px;
+      }
+      .writing-example li {
+        padding-bottom: 3px;
+        font-size: 20px;
+      }
+      .writing-example h3 {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <h1>Instructions</h1>
+      <ul class='instructions'>
+        <li>You will be shown a sentence that describes an image</li>
+        <li>You will break up the sentence into one or more short phrases</li>
+        <li>
+          For example, the sentence "A black dog and a white dog are carrying a stick"
+          would be broken into the following phrases:
+          <ul>
+            <li>"Dog is white"</li>
+            <li>"Dog carrying stick"</li>
+            <li>"Dog is black"</li>
+            <li>"Dog carrying stick"</li>
+          </ul>
+        </li>
+        <li>
+          All short phrases must have one of two forms:
+          <ul>
+            <li>[object] [relationship] [object] <i>(e.g., "dog carrying stick")</i></li>
+            <li>[object] is [description] <i>(e.g., "dog is white")</i></li>
+          </ul>
+        </li>
+        <li>
+          An <b>object</b> in a short phrase can be a person, animal, or other object that
+          appears in the image
+        </li>
+        <li>
+          A <b>relationship</b> in a short phrase relates two objects;
+          it may be an action <i>(e.g. "carrying", "eating")</i>
+          or a spatial relationship <i>(e.g. "next to", "above")</i>
+        </li>
+        <li>
+          A <b>description</b> gives a property of an object; this may be an action
+          <i>(e.g. "dog is walking")</i>, or any other descriptive word
+          <i>(e.g., "dog is white", "dog is cute")</i>
+        </li>
+        <li>
+          For each <b>object</b>, you will draw a box to indicate its position in the image
+        </li>
+        <li>
+          When multiple phrases mention the <b>same object</b> in the
+          image, you should <b>only draw one box</b> for that object:
+          <div class='row text-center'>
+            <div class='col-md-4 col-md-offset-2 bbox-example bg-success'>
+              <b>Good:</b>
+              <br>
+              <img class='img-responsive' src='img/repeated_correct.png'>
+            </div>
+            <div class='col-md-4 bbox-example bg-danger'>
+              <b>Bad:</b>
+              <br>
+              <img class='img-responsive' src='img/repeated_wrong.png'>
+            </div>
+          </div>
+        </li>
+        <li>
+          Each box should be <b>tight</b> around its object, and should
+          <b>completely cover</b> the object.
+          <div class='row text-center'>
+            <div class='col-md-4 bbox-example bg-success'>
+              <b>Good:</b>
+              <br>
+              <img class='img-responsive' src='img/tight_correct.jpg'>
+            </div>
+            <div class='col-md-4 bbox-example bg-danger'>
+              <b>Bad:</b>
+              <br>
+              <img class='img-responsive' src='img/tight_wrong1.jpg'>
+            </div>
+            <div class='col-md-4 bbox-example bg-danger'>
+              <b>Bad:</b>
+              <br>
+              <img class='img-responsive' src='img/tight_wrong2.jpg'>
+            </div>
+          </div>
+        </li>
+        <li>
+          Each box should only cover the <b>visible part</b> of each object.
+          <div class='row text-center'>
+            <div class='col-md-4 col-md-offset-2 bbox-example bg-success'>
+              <b>Good:</b>
+              <br>
+              <img class='img-responsive' src='img/vis_correct.jpg'>
+            </div>
+            <div class='col-md-4 bbox-example bg-danger'>
+              <b>Bad:</b>
+              <br>
+              <img class='img-responsive' src='img/vis_wrong.jpg'>
+            </div>
+          </div>
+        </li>
+        <li>
+          Objects that take up a large portion of the image should be <b>completey covered</b>
+          by their boxes, such as the boxes for the <b>road</b> below:
+          <div class='row text-center'>
+            <div class='col-md-4 col-md-offset-2 bbox-example bg-success'>
+              <b>Good:</b>
+              <br>
+              <img class='img-responsive' src='img/large-good.png'>
+            </div>
+            <div class='col-md-4 bbox-example bg-danger'>
+              <b>Bad:</b>
+              <br>
+              <img class='img-responsive' src='img/large-bad.png'>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class='container-fluid'>
+
+      <div class='row'>
+        <div class='col-md-10 col-md-offset-1'>
+          <h1>Task</h1>
+        </div>
+      </div>
+
+      <div class='row'>
+        <div class='col-md-9 col-md-offset-3'>
+          <h2>Sentence:</h2>
+          <h3 id='sentence'></h3>
+        </div>
+      </div>
+
+      <div class='row'>
+        <div class='col-md-3'>
+          <div class='row'>
+            <div id='progress-div'></div>
+          </div>
+          <div class='row text-center'>
+            <h3>Completed phrases</h3>
+            <ul id='triple-list'></ul>
+          </div>
+        </div>
+        <div class='col-md-8'>
+          <div id='write-triple-div'></div>
+          <div id='label-object-div'></div>
+          <div id='verify-object-div'></div>
+          <div id='check-duplicates-div'></div>
+          <div id='error-div'></div>
+          <div id='svg-div'></div>
+          <div id='draw-box-div'></div>
+        </div>
+        <div class='col-md-1'></div>
+      </div>
+    </div>
+
+    <script type='text/template' id='progress-template'>
+      <div class='my-progress hidden'>
+        <span class='glyphicon binary-glyph'></span>
+        <%= binary_top %> / <%= binary_bottom %> relationship phrases
+        <br>
+        <span class='glyphicon unary-glyph'></span>
+        <%= unary_top %> / <%= unary_bottom %> description phrases
+        <br>
+        <span class='glyphicon all-glyph'></span>
+        <%= all_top %> / <%= all_bottom %> phrases
+      </div>
+    </script>
+
+    <script type='text/template' id='draw-box-template'>
+      <div class='panel panel-default'>
+        <div class='panel-heading'>
+          <h3 class='panel-title'>Draw a box</h3>
+        </div>
+        <div class='panel-body text-center font24'>
+          <button class='btn btn-sm btn-danger pull-left'>Back (q)</button>
+          You wrote
+          "<span class='subject'><%= subject_name %></span>
+          <span><%= predicate %></span>
+          <span class='object'><%= object_name %></span>."
+          <br>
+          Draw a box around the
+          <span class='emph-target'><%= target_name %></span> in the image.
+          <p>
+          <button class='btn btn-lg btn-success'>
+            Done
+            <br>
+            (enter)
+          </  button>
+        </div>
+      </div>
+      <div class='canvas-div'>
+      </div>
+    </script>
+
+    <script type='text/template' id='label-object-template'>
+      <div class='panel panel-default'>
+        <div class='panel-heading'>
+          <h3 class='panel-title'>Verify the <%= target_name %></h3>
+        </div>
+        <div class='panel-body text-center font24'>
+          <button class='btn btn-sm btn-danger pull-left'>Back (q)</button>
+          You wrote
+          "<span class='subject'><%= subject_name %></span>
+          <span><%= predicate %></span>
+          <span class='object'><%= object_name %></span>."
+          <br>
+          If this <span class='emph-target'><%= target_name %></span>
+          has already been labeled then <b>click its dot</b>.
+          Otherwise, <b>click anywhere in the image</b> to begin labeling
+          this <span class='emph-target'><%= target_name %></span>.
+        </div>
+      </div>
+    </script>
+
+    <script type='text/template' id='verify-object-template'>
+      <div class='panel panel-default'>
+        <div class='panel-heading'>
+          <h3 class='panel-title'>Label the <%= target_name %></h3>
+        </div>
+        <div class='panel-body text-center font24'>
+          <button class='btn btn-sm btn-danger pull-left'>Back (q)</button>
+          You wrote
+          "<span class='subject'><%= subject_name %></span>
+          <span><%= predicate %></span>
+          <span class='object'><%= object_name %></span>."
+          <br>
+          Is the highlighted
+          <span class='emph-target'><%= target_name %></span>
+          in the image below the
+          <span class='emph-target'><%= target_name %></span>
+          in the phrase above?
+          <br>
+          <button class='btn btn-lg btn-danger'>No (N)</button>
+          <button class='btn btn-lg btn-success'>Yes (Y)</button>
+        </div>
+      </div>
+    </script>
+
+
+    <script type='text/template' id='write-triple-template'>
+      <div class='panel panel-default'>
+        <div class='panel-heading'>
+          <h3 class='panel-title'>Write a phrase</h3>
+        </div>
+        <div class='panel-body'>
+          <div class='row pad-bottom text-center font24'>
+            Write a phrase about the image from the sentence:
+          </div>
+          <div class='row'>
+            <div class='col-md-3'>
+              <input class='sentence-part' type='text' maxlength=20 disabled/>
+            </div>
+            <div class='col-md-4'>
+              <input class='sentence-part' type='text' maxlength=20 disabled/>
+            </div>
+            <div class='col-md-3'>
+              <input class='sentence-part' type='text' maxlength=20 disabled/>
+            </div>             
+            <div class='col-md-2'>
+              <button type='button' class='btn btn-lg btn-primary' disabled>
+                <span class='glyphicon glyphicon-plus'></span>
+              </button>
+            </div>
+          </div>     
+        </div>
+      </div>
+    </script>
+
+    <script type='text/template' id='check-duplicates-template'>
+      <div class='panel panel-default'>
+        <div class='panel-heading'>
+          <h3 class='panel-title'>Are these the same?</h3>
+        </div>
+        <div class='panel-body text-center font24'>
+          You just drew a box around
+          <span style="color:red"><b><%= new_entity %></b></span>.
+          <br>
+          This is very similar to the box we already have for
+          <span style="color:blue"><b><%= existing_entity %></b></span>.
+          <br>
+          Do the two boxes refer to the same object in the image?
+          <br>
+          <button class='btn btn-lg btn-danger'>No (N)</button>
+          <button class='btn btn-lg btn-success'>Yes (Y)</button>
+        </div>
+      </div>
+    </script>
+
+    <script src='js/open-sentences-backbone.js'></script>
+  </body>
+</html>
