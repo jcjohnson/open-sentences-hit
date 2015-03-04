@@ -911,6 +911,7 @@ $(function() {
       image_url: 'http://assets.dogtime.com/asset/image/4f966ff0eadf725ead000482/column_dog-picture-photo-friends-play-stick.jpg',
       sentence: "A black dog and a white dog are carrying a stick",
     }
+    // A call to simpleamt.getInput goes here
     if (!input.hasOwnProperty('existing_data')) {
       input.existing_data = {
         objects: [],
@@ -950,29 +951,18 @@ $(function() {
       $('<button>').click(f).text(name).addClass('btn btn-default')
                    .appendTo($('body'));
     }
-    var is_test = true;
+    var is_test = false;
     if (is_test) {
       add_button('print data', function() {
         console.log(app.toJSON());
       });
     }
+
+    // Using simpleamt, only enable when we are not in preview mode.
     app.enable();
 
-    /*
-    if (!TurkUtils.isPreview()) {
-      app.enable();
-      $('#submit_button').click(function(e) {
-        $('#output').val($.toJSON(app.toJSON()));
-
-        // Call census
-        e.preventDefault();
-        $('#submit_button').prop('disabled', true);
-        census.submit('#census-div', '#mturk_form', 'visualgenome');
-
-        return false;
-      });
-    }
-    */
+    // Add a click handler for $('#submit-btn') here; get output
+    // by calling app.toJSON()
 
   }
 
